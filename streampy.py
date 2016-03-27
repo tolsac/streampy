@@ -1,6 +1,6 @@
 import itertools
-from core.exceptions import StreamException
-from core.executor import Executor
+from streamexceptions import StreamException
+from streamexecutor import Executor
 
 class StreamType(object):
     SEQUENTIAL, PARALLEL = range(2)
