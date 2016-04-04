@@ -83,10 +83,10 @@ class ChainTest(unittest.TestCase):
 
 class SortTest(unittest.TestCase):
     def test_simple_sort_1(self):
-        self.assertEquals(Stream([1,3,2,5,4,6]).sort(key=lambda x: x - 0).list(), [1, 2, 3, 4, 5, 6])
+        self.assertEquals(Stream([1,3,2,5,4,6]).sort(cmp=lambda x, y: cmp(x, y)).list(), [1, 2, 3, 4, 5, 6])
 
     def test_simple_sort_2(self):
-        self.assertEquals(Stream([1,3,2,5,4,6]).sort(key=lambda x: x - 9999).list(), [6, 5, 4, 3, 2, 1])
+        self.assertEquals(Stream([1,3,2,5,4,6]).sort(cmp=lambda x, y: cmp(y, x)).list(), [6, 5, 4, 3, 2, 1])
 
 
 class LimitTest(unittest.TestCase):
@@ -121,7 +121,6 @@ class AllTest(unittest.TestCase):
     def test_simple_all_3(self):
         self.assertEquals(Stream("yeah baby !").all(lambda x: 'a' < x < 'c'), False)
 
-
 class MinTest(unittest.TestCase):
     def test_simple_all_1(self):
         self.assertEquals(Stream([1,3,2,5,4,6]).min(), 1)
@@ -129,14 +128,12 @@ class MinTest(unittest.TestCase):
     def test_simple_all_2(self):
         self.assertEquals(Stream([3,3,2,5,4,6]).min(), 2)
 
-
 class MaxTest(unittest.TestCase):
     def test_simple_all_1(self):
         self.assertEquals(Stream([1,3,2,5,4,6]).max(), 6)
 
     def test_simple_all_2(self):
         self.assertEquals(Stream([4,42,2,5,4,6]).max(), 42)
-
 
 class RangeTest(unittest.TestCase):
     def test_simple_range_1(self):
@@ -200,6 +197,7 @@ class FunctionnalTest(unittest.TestCase):
             .limit(10)\
             .last()
         self.assertEquals(element, 'HI98')
+
 
     def test_simple_4(self):
         element = Stream.range(100000) \
