@@ -1,6 +1,17 @@
-import itertools
 from streamexceptions import StreamException
 from streamexecutor import StreamExecutor
+
+try:
+    import itertools.imap as map
+    import itertools.ifilter as filter
+    import itertools.chain as chain
+except ImportError:
+    pass
+
+try:
+    _ranger = xrange
+except NameError:
+    _ranger = range
 
 
 class StreamType(object):
@@ -41,7 +52,7 @@ class Stream(object):
 
     @staticmethod
     def range(size):
-        return Stream(xrange(size))
+        return Stream(_ranger(size))
 
     def parallel(self):
         self.type = StreamType.PARALLEL
@@ -68,15 +79,15 @@ class Stream(object):
 
     def map(self, predicate):
         if self.type == StreamType.SEQUENTIAL:
-            return self.__class__(iter(itertools.imap(predicate, self.iterable)))
+            return self.__class__(iter(map(predicate, self.iterable)))
         else:
             return self.__class__(iter(self.executor.map(predicate, self.iterable)))
 
     def chain(self, _iterable):
-        return self.__class__(iter(itertools.chain(self.iterable, _iterable)))
+        return self.__class__(iter(chain(self.iterable, _iterable)))
 
     def filter(self, predicate):
-        return self.__class__(iter(list(itertools.ifilter(predicate, self.iterable))))
+        return self.__class__(iter(list(filter(predicate, self.iterable))))
 
     def reduce(self, predicate, initializer=None):
         if initializer is None:
@@ -99,7 +110,7 @@ class Stream(object):
 
     def limit(self, count):
         def _limit(iterable, _count):
-            for _ in xrange(_count):
+            for _ in _ranger(_count):
                 yield next(iterable)
         return self.__class__(_limit(self, count))
 
