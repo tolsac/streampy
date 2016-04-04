@@ -1,6 +1,7 @@
 from multiprocessing import Pool
 
-class Executor(object):
+
+class StreamExecutor(object):
     def __init__(self):
         self.pool = Pool()
 

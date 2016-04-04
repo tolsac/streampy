@@ -1,9 +1,11 @@
 import itertools
 from streamexceptions import StreamException
-from streamexecutor import Executor
+from streamexecutor import StreamExecutor
+
 
 class StreamType(object):
     SEQUENTIAL, PARALLEL = range(2)
+
 
 class Stream(object):
     def __init__(self, *_iterable):
@@ -43,7 +45,8 @@ class Stream(object):
 
     def parallel(self):
         self.type = StreamType.PARALLEL
-        self.executor = Executor()
+        if self.executor is None:
+            self.executor = StreamExecutor()
         return self
 
     def distinct(self):
@@ -53,7 +56,7 @@ class Stream(object):
                 distincted.append(it)
         return self.__class__(distincted)
 
-    def senqential(self):
+    def sequential(self):
         self.type = StreamType.SEQUENTIAL
         return self
 
@@ -95,8 +98,8 @@ class Stream(object):
         return self.__class__(sorted(self.iterable, **kwargs))
 
     def limit(self, count):
-        def _limit(iterable, count):
-            for _ in xrange(count):
+        def _limit(iterable, _count):
+            for _ in xrange(_count):
                 yield next(iterable)
         return self.__class__(_limit(self, count))
 
@@ -136,6 +139,6 @@ class Stream(object):
                 last_it = it
             return last_it
         else:
-           return self.filter(predicate).last()
+            return self.filter(predicate).last()
 
 
