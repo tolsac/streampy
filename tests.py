@@ -19,12 +19,10 @@ class CreationTest(unittest.TestCase):
         self.assertEquals(1000, s.size())
 
     def test_create_stream_with_bad_type(self):
-        with self.assertRaises(StreamTypeError):
-            Stream(None)
+        self.assertRaises(StreamTypeError, Stream.__init__, Stream(), None)
 
     def test_create_stream_with_more_than_one_param(self):
-        with self.assertRaises(StreamTypeError):
-            Stream([], [])
+        self.assertRaises(StreamTypeError, Stream.__init__, Stream(), *([], []))
 
 
 class SizeTest(unittest.TestCase):
@@ -175,8 +173,7 @@ class GetItemTest(unittest.TestCase):
         self.assertEquals(Stream.range(430)[50], 50)
 
     def test_simple_getitem_3(self):
-        with self.assertRaises(StreamIndexError):
-            s = Stream([])[1]
+        self.assertRaises(StreamIndexError, Stream.__getitem__, Stream([]), 1)
 
 
 class DistinctTest(unittest.TestCase):
