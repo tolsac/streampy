@@ -1,4 +1,4 @@
-from streamexceptions import StreamException
+from streamexceptions import StreamException, StreamIndexError, StreamTypeError
 from streamexecutor import StreamExecutor
 import itertools
 
@@ -24,10 +24,10 @@ class Stream(object):
 
         if len(_iterable) == 1:
             if _iterable[0] is None:
-                raise StreamException("StreamTypeError", "Argument is None")
+                raise StreamTypeError("Argument is None")
             self.iterable = iter(_iterable[0])
         elif len(_iterable) > 1:
-            raise StreamException("StreamTypeError", "Takes only one argument")
+            raise StreamTypeError("Takes only one argument")
         else:
             self.iterable = iter([])
 
@@ -44,7 +44,7 @@ class Stream(object):
                 if i == position:
                     return it
                 i += 1
-        raise StreamException("StreamIndexError", "Stream index out of range")
+        raise StreamIndexError("Stream index out of range")
 
     def next(self):
         return self.iterable.next()
@@ -124,7 +124,7 @@ class Stream(object):
         elif start == end:
             return self.__class__([])
         else:
-            raise StreamException("StreamIndexError", "Stream index out of range")
+            raise StreamIndexError("Stream index out of range")
 
     def max(self):
         return max(self)
