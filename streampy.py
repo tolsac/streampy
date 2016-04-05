@@ -12,9 +12,14 @@ class StreamType(object):
     SEQUENTIAL, PARALLEL = range(2)
 
 
+class StreamMapper(object):
+    THREAD, PROCESS = range(2)
+
+
 class Stream(object):
     def __init__(self, *_iterable):
         self.type = StreamType.SEQUENTIAL
+        self.mapping = StreamMapper.PROCESS
         self.executor = None
 
         if len(_iterable) == 1:
@@ -45,14 +50,17 @@ class Stream(object):
         return self.iterable.next()
 
     @staticmethod
-    def range(size):
-        return Stream(_ranger(size))
+    def range(*args):
+        return Stream(_ranger(*args))
 
-    def parallel(self):
+    def parallel(self, **kwargs):
         self.type = StreamType.PARALLEL
         if self.executor is None:
-            self.executor = StreamExecutor()
+            self.executor = StreamExecutor(**kwargs)
         return self
+
+    def sequential(self):
+        self.type = StreamType.SEQUENTIAL
 
     def distinct(self):
         distincted = []
@@ -60,10 +68,6 @@ class Stream(object):
             if it not in distincted:
                 distincted.append(it)
         return self.__class__(distincted)
-
-    def sequential(self):
-        self.type = StreamType.SEQUENTIAL
-        return self
 
     def size(self):
         return self.__len__()
@@ -75,7 +79,7 @@ class Stream(object):
         if self.type == StreamType.SEQUENTIAL:
             return self.__class__(iter(itertools.imap(predicate, self.iterable)))
         else:
-            return self.__class__(iter(self.executor.map(predicate, self.iterable)))
+            return self.__class__(iter(self.executor.map(predicate, self.iterable, self.mapping)))
 
     def chain(self, _iterable):
         return self.__class__(iter(itertools.chain(self.iterable, _iterable)))
@@ -109,7 +113,18 @@ class Stream(object):
         return self.__class__(_limit(self, count))
 
     def substream(self, start, end):
-        pass
+        def _substream(iterable, _start, _end):
+            counter = 0
+            for it in iterable:
+                if _start <= counter < _end:
+                    yield it
+                counter += 1
+        if 0 <= start < end and end >= 0:
+            return self.__class__(_substream(self, start, end))
+        elif start == end:
+            return self.__class__([])
+        else:
+            raise StreamException("StreamIndexError", "Stream index out of range")
 
     def max(self):
         return max(self)
