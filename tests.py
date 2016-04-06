@@ -53,6 +53,22 @@ class FilterTest(unittest.TestCase):
         self.assertEquals(50000, s.size())
 
 
+class ExcludeTest(unittest.TestCase):
+    def test_simple_exclude_1(self):
+        s = Stream.range(10).exclude(lambda x: x % 2 == 0).list()
+        self.assertEquals(s, [1, 3, 5, 7, 9])
+        s = Stream(['this', 'is', 'a', 'pretty', 'cat']).exclude(lambda x: x == 'cat').list()
+        self.assertEquals(s, ['this', 'is', 'a', 'pretty'])
+
+    def test_simple_exclude_2(self):
+        s = ''.join(Stream('a simple string').exclude(lambda x: x == 'a').list())
+        self.assertEquals(s, ' simple string')
+
+    def test_simple_exclude_3(self):
+        s = Stream.range(100001).exclude(lambda x: x > 50000)
+        self.assertEquals(50001, s.size())
+
+
 class MapTest(unittest.TestCase):
     def test_simple_map_1(self):
         def add(x, y):

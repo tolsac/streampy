@@ -21,6 +21,7 @@ class Stream(object):
         self.type = StreamType.SEQUENTIAL
         self.mapping = StreamMapper.PROCESS
         self.executor = None
+        self.file_ref = None
 
         if len(_iterable) == 1:
             if _iterable[0] is None:
@@ -46,12 +47,18 @@ class Stream(object):
                 i += 1
         raise StreamIndexError("Stream index out of range")
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def __del__(self):
+        if self.file_ref:
+            self.file_ref.close()
+
     def next(self):
         return self.iterable.next()
-
-    @staticmethod
-    def range(*args):
-        return Stream(_ranger(*args))
 
     def parallel(self, **kwargs):
         self.type = StreamType.PARALLEL
@@ -61,6 +68,7 @@ class Stream(object):
 
     def sequential(self):
         self.type = StreamType.SEQUENTIAL
+        return self
 
     def distinct(self):
         distincted = []
@@ -77,15 +85,18 @@ class Stream(object):
 
     def map(self, predicate):
         if self.type == StreamType.SEQUENTIAL:
-            return self.__class__(iter(itertools.imap(predicate, self.iterable)))
+            return self.__class__(itertools.imap(predicate, self.iterable))
         else:
-            return self.__class__(iter(self.executor.map(predicate, self.iterable, self.mapping)))
+            return self.__class__(self.executor.map(predicate, self.iterable))
 
     def chain(self, _iterable):
-        return self.__class__(iter(itertools.chain(self.iterable, _iterable)))
+        return self.__class__(itertools.chain(self.iterable, _iterable))
 
     def filter(self, predicate):
-        return self.__class__(iter(list(itertools.ifilter(predicate, self.iterable))))
+        return self.__class__(itertools.ifilter(predicate, self.iterable))
+
+    def exclude(self, predicate):
+        return self.__class__((it for it in self.iterable if not predicate(it)))
 
     def reduce(self, predicate, initializer=None):
         if initializer is None:
@@ -161,4 +172,18 @@ class Stream(object):
         else:
             return self.filter(predicate).last()
 
+    @staticmethod
+    def file(*args):
+        if isinstance(args[0], file):
+            return Stream((line for line in args[0]))
+        elif isinstance(args[0], str):
+            _f = open(*args)
+            stream = Stream.file(_f)
+            stream.file_ref = _f
+            ''' be aware that the file will never be closed '''
+            return stream
+
+    @staticmethod
+    def range(*args):
+        return Stream(_ranger(*args))
 
