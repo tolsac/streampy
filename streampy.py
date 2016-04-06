@@ -89,6 +89,18 @@ class Stream(object):
         else:
             return self.__class__(self.executor.map(predicate, self.iterable))
 
+    def foreach(self, func):
+        for it in self.iterable:
+            func(it)
+
+    def skip(self, count):
+        for i in xrange(count):
+            try:
+                next(self.iterable)
+            except StopIteration:
+                return self.__class__()
+        return self.__class__(self.iterable)
+
     def chain(self, _iterable):
         return self.__class__(itertools.chain(self.iterable, _iterable))
 

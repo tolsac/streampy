@@ -181,6 +181,14 @@ class LastTest(unittest.TestCase):
         self.assertEquals(Stream.range(423).last(predicate=lambda x: 42 < x < 46), 45)
 
 
+class SkipTest(unittest.TestCase):
+    def test_simple_skip_1(self):
+        self.assertEquals(Stream.range(10).skip(9).list(), [9])
+
+    def test_simple_skip_2(self):
+        self.assertEquals(Stream.range(10).skip(15).list(), [])
+
+
 class GetItemTest(unittest.TestCase):
     def test_simple_getitem_1(self):
         self.assertEquals(Stream.range(10)[0], 0)
@@ -245,29 +253,19 @@ class FunctionnalTest(unittest.TestCase):
             .map(lambda x: x.upper())\
             .filter(lambda x: x.endswith('8'))\
             .limit(10)\
-            .last()
-        self.assertEquals(element, 'HI98')
+            .map(lambda x: x[2])\
+            .skip(1)\
+            .map(int)\
+            .list()
+        self.assertEquals(element, range(1, 10))
 
     def test_simple_4(self):
-        element = Stream.range(100000) \
-            .parallel() \
-            .filter(lambda x: x % 2 == 0) \
-            .map(lambda x: str(x)) \
-            .map(lambda x: 'Hi{0}'.format(x)) \
+        element = Stream(['You', 'shall', 'not', 'pass']) \
             .map(lambda x: x.upper()) \
-            .filter(lambda x: x.endswith('8')) \
-            .limit(10) \
-            .last()
-        self.assertEquals(element, 'HI98')
+            .exclude(lambda x: x == 'NOT')\
+            .exclude(lambda x: x == 'PASS')\
+            .chain(["pass"])\
+            .map(lambda x: x.upper()) \
+            .list()
+        self.assertEquals(element, ['YOU', 'SHALL', 'PASS'])
 
-    def test_simple_5(self):
-        element = Stream.range(100000) \
-            .parallel(thread=2) \
-            .filter(lambda x: x % 2 == 0) \
-            .map(lambda x: str(x)) \
-            .map(lambda x: 'Hi{0}'.format(x)) \
-            .map(lambda x: x.upper()) \
-            .filter(lambda x: x.endswith('8')) \
-            .limit(10) \
-            .last()
-        self.assertEquals(element, 'HI98')
