@@ -1,5 +1,5 @@
-from streamexecutor import StreamExecutor
-from compatibility import _mapper, _filter, _chainer, _ranger, _islicer
+from .streamexecutor import StreamExecutor
+from .compatibility import _mapper, _filter, _chainer, _ranger, _islicer
 import functools
 
 
