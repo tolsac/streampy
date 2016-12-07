@@ -1,5 +1,5 @@
 import unittest
-from streamexceptions import StreamException, StreamIndexError, StreamTypeError
+from streamexceptions import StreamIndexError, StreamTypeError
 from streampy import Stream
 
 
