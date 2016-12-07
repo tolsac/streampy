@@ -1,11 +1,6 @@
-from streamexceptions import StreamException, StreamIndexError, StreamTypeError
+from streamexceptions import StreamIndexError, StreamTypeError
 from streamexecutor import StreamExecutor
-import itertools
-
-try:
-    _ranger = xrange
-except NameError:
-    _ranger = range
+from compatibility import _mapper, _filter, _chainer, _ranger, _islicer
 
 
 class StreamType(object):
@@ -22,7 +17,6 @@ class Stream(object):
         self.mapping = StreamMapper.PROCESS
         self.executor = None
         self.file_ref = None
-
         if len(_iterable) == 1:
             if _iterable[0] is None:
                 raise StreamTypeError("Argument is None")
@@ -85,7 +79,7 @@ class Stream(object):
 
     def map(self, predicate):
         if self.type == StreamType.SEQUENTIAL:
-            return self.__class__(itertools.imap(predicate, self.iterable))
+            return self.__class__(_mapper(predicate, self.iterable))
         else:
             return self.__class__(self.executor.map(predicate, self.iterable))
 
@@ -102,10 +96,10 @@ class Stream(object):
         return self.__class__(self.iterable)
 
     def chain(self, _iterable):
-        return self.__class__(itertools.chain(self.iterable, _iterable))
+        return self.__class__(_chainer(self.iterable, _iterable))
 
     def filter(self, predicate):
-        return self.__class__(itertools.ifilter(predicate, self.iterable))
+        return self.__class__(_filter(predicate, self.iterable))
 
     def exclude(self, predicate):
         return self.__class__((it for it in self.iterable if not predicate(it)))
@@ -124,7 +118,7 @@ class Stream(object):
             for it in iterable:
                 fc(it)
                 yield it
-        return self.__class__(_peek(self, predicate))
+        return self.__class__(_peek(self.iterable, predicate))
 
     def sort(self, **kwargs):
         return self.__class__(sorted(self.iterable, **kwargs))
@@ -133,7 +127,16 @@ class Stream(object):
         def _limit(iterable, _count):
             for _ in _ranger(_count):
                 yield next(iterable)
-        return self.__class__(_limit(self, count))
+        return self.__class__(_limit(self.iterable, count))
+
+    def chunk(self, chunk_size):
+        def _chunker(iterable, _chunk_size):
+            while True:
+                chunk = list(_islicer(iterable, _chunk_size))
+                if not chunk:
+                    return
+                yield chunk
+        return self.__class__(_chunker(self.iterable, chunk_size))
 
     def substream(self, start, end):
         def _substream(iterable, _start, _end):
@@ -143,7 +146,7 @@ class Stream(object):
                     yield it
                 counter += 1
         if 0 <= start < end and end >= 0:
-            return self.__class__(_substream(self, start, end))
+            return self.__class__(_substream(self.iterable, start, end))
         elif start == end:
             return self.__class__([])
         else:

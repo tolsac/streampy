@@ -225,6 +225,11 @@ class SubstreamTest(unittest.TestCase):
         self.assertEqual(s, range(100, 200))
 
 
+class ChunkTest(unittest.TestCase):
+    def test_simple_chunk(self):
+        self.assertEqual(Stream.range(10).chunk(2).list(), [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]])
+
+
 class FunctionnalTest(unittest.TestCase):
     def test_simple_1(self):
         element = Stream\
