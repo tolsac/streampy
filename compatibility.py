@@ -1,4 +1,5 @@
 import itertools
+from past.builtins import cmp as _cmp
 
 _islicer = itertools.islice
 
@@ -16,6 +17,11 @@ try:
     _mapper = itertools.imap
 except (ImportError, AttributeError):
     _mapper = map
+
+try:
+    _comparer = cmp
+except NameError:
+    _comparer = _cmp
 
 
 def _chainer(*iterables):

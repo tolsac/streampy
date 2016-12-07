@@ -1,6 +1,6 @@
-from streamexceptions import StreamIndexError, StreamTypeError
 from streamexecutor import StreamExecutor
 from compatibility import _mapper, _filter, _chainer, _ranger, _islicer
+import functools
 
 
 class StreamType(object):
@@ -19,15 +19,15 @@ class Stream(object):
         self.file_ref = None
         if len(_iterable) == 1:
             if _iterable[0] is None:
-                raise StreamTypeError("Argument is None")
+                raise TypeError("Argument is None")
             self.iterable = iter(_iterable[0])
         elif len(_iterable) > 1:
-            raise StreamTypeError("Takes only one argument")
+            raise TypeError("Takes only one argument")
         else:
             self.iterable = iter([])
 
     def __iter__(self):
-        return self
+        return self.iterable
 
     def __len__(self):
         return sum(1 for item in self.iterable)
@@ -39,7 +39,7 @@ class Stream(object):
                 if i == position:
                     return it
                 i += 1
-        raise StreamIndexError("Stream index out of range")
+        raise IndexError("Stream index out of range")
 
     def __enter__(self):
         return self
@@ -52,7 +52,7 @@ class Stream(object):
             self.file_ref.close()
 
     def next(self):
-        return self.iterable.next()
+        return next(self.iterable)
 
     def parallel(self, **kwargs):
         self.type = StreamType.PARALLEL
@@ -88,7 +88,7 @@ class Stream(object):
             func(it)
 
     def skip(self, count):
-        for i in xrange(count):
+        for i in _ranger(count):
             try:
                 next(self.iterable)
             except StopIteration:
@@ -121,6 +121,10 @@ class Stream(object):
         return self.__class__(_peek(self.iterable, predicate))
 
     def sort(self, **kwargs):
+        _cmp = kwargs.pop('cmp', None)
+
+        if _cmp:
+            kwargs['key'] = functools.cmp_to_key(_cmp)
         return self.__class__(sorted(self.iterable, **kwargs))
 
     def limit(self, count):
@@ -150,7 +154,7 @@ class Stream(object):
         elif start == end:
             return self.__class__([])
         else:
-            raise StreamIndexError("Stream index out of range")
+            raise IndexError("Stream index out of range")
 
     def max(self):
         return max(self)
@@ -160,14 +164,14 @@ class Stream(object):
 
     def any(self, predicate):
         if predicate is None:
-            iterator = iter(self)
+            iterator = iter(self.iterable)
         else:
             iterator = self.map(predicate)
         return any(iterator)
 
     def all(self, predicate):
         if predicate is None:
-            iterator = iter(self)
+            iterator = iter(self.iterable)
         else:
             iterator = self.map(predicate)
         return all(iterator)

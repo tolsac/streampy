@@ -1,7 +1,6 @@
 import unittest
-from streamexceptions import StreamIndexError, StreamTypeError
-from streampy import Stream
-
+from .streampy import Stream
+from .compatibility import _comparer
 
 class CreationTest(unittest.TestCase):
     def test_create_stream_without_params(self):
@@ -19,10 +18,10 @@ class CreationTest(unittest.TestCase):
         self.assertEquals(1000, s.size())
 
     def test_create_stream_with_bad_type(self):
-        self.assertRaises(StreamTypeError, Stream.__init__, Stream(), None)
+        self.assertRaises(TypeError, Stream.__init__, Stream(), None)
 
     def test_create_stream_with_more_than_one_param(self):
-        self.assertRaises(StreamTypeError, Stream.__init__, Stream(), *([], []))
+        self.assertRaises(TypeError, Stream.__init__, Stream(), *([], []))
 
 
 class SizeTest(unittest.TestCase):
@@ -99,10 +98,10 @@ class ChainTest(unittest.TestCase):
 
 class SortTest(unittest.TestCase):
     def test_simple_sort_1(self):
-        self.assertEquals(Stream([1, 3, 2, 5, 4, 6]).sort(cmp=lambda x, y: cmp(x, y)).list(), [1, 2, 3, 4, 5, 6])
+        self.assertEquals(Stream([1, 3, 2, 5, 4, 6]).sort(cmp=lambda x, y: _comparer(x, y)).list(), [1, 2, 3, 4, 5, 6])
 
     def test_simple_sort_2(self):
-        self.assertEquals(Stream([1, 3, 2, 5, 4, 6]).sort(cmp=lambda x, y: cmp(y, x)).list(), [6, 5, 4, 3, 2, 1])
+        self.assertEquals(Stream([1, 3, 2, 5, 4, 6]).sort(cmp=lambda x, y: _comparer(y, x)).list(), [6, 5, 4, 3, 2, 1])
 
 
 class LimitTest(unittest.TestCase):
@@ -156,10 +155,10 @@ class MaxTest(unittest.TestCase):
 
 class RangeTest(unittest.TestCase):
     def test_simple_range_1(self):
-        self.assertEquals(Stream.range(10).list(), range(10))
+        self.assertEquals(Stream.range(10).list(), list(range(10)))
 
     def test_simple_range_2(self):
-        self.assertEquals(Stream.range(42000).list(), range(42000))
+        self.assertEquals(Stream.range(42000).list(), list(range(42000)))
 
 
 class FirstTest(unittest.TestCase):
@@ -197,7 +196,7 @@ class GetItemTest(unittest.TestCase):
         self.assertEquals(Stream.range(430)[50], 50)
 
     def test_simple_getitem_3(self):
-        self.assertRaises(StreamIndexError, Stream.__getitem__, Stream([]), 1)
+        self.assertRaises(IndexError, Stream.__getitem__, Stream([]), 1)
 
 
 class DistinctTest(unittest.TestCase):
@@ -222,12 +221,18 @@ class SubstreamTest(unittest.TestCase):
         s = Stream.range(100)\
             .chain(Stream.range(100, 1000))\
             .substream(100, 200).list()
-        self.assertEqual(s, range(100, 200))
+        self.assertEqual(s, list(range(100, 200)))
 
 
 class ChunkTest(unittest.TestCase):
-    def test_simple_chunk(self):
+    def test_simple_chunk_1(self):
         self.assertEqual(Stream.range(10).chunk(2).list(), [[0, 1], [2, 3], [4, 5], [6, 7], [8, 9]])
+
+    def test_simple_chunk_2(self):
+        self.assertEqual(Stream.range(10).chunk(3).list(), [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]])
+
+    def test_simple_chunk_3(self):
+        self.assertEqual(Stream.range(1).chunk(2).list(), [[0]])
 
 
 class FunctionnalTest(unittest.TestCase):
@@ -262,7 +267,7 @@ class FunctionnalTest(unittest.TestCase):
             .skip(1)\
             .map(int)\
             .list()
-        self.assertEquals(element, range(1, 10))
+        self.assertEquals(element, list(range(1, 10)))
 
     def test_simple_4(self):
         element = Stream(['You', 'shall', 'not', 'pass']) \
