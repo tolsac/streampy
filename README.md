@@ -49,11 +49,12 @@ Firstly you have to be aware that streampy is using laziness as far as it can. T
 	- last
 	- first
 
-> **Benefits**
-> - Laziness
-> - Small memory footprint even for massive data sets
-> - Automatic and configurable parallelization
-> - Smart concurrent pool management
+
+**Benefits**
+ - Laziness 
+ - Small memory footprint even for massive data sets
+ - Automatic and configurable parallelization
+ - Smart concurrent pool management
 
 Examples
 ========
@@ -70,7 +71,7 @@ stream = Stream(['You', 'shall', 'not', 'pass'])
             .map(lambda x: x.upper())
             .list()
 
-> stream == ['YOU', 'SHALL', 'PASS']
+>>> stream == ['YOU', 'SHALL', 'PASS']
 True
 ```
 
@@ -116,9 +117,71 @@ Documentation
 **Stream(iterable)**
 ```
 Stream(some_iterable)
+Stream([1, 2, 3])
+Stream((1, 2, 3))
+Stream(range(10))
+
+def gen():
+    for i in range(3):
+        yield i
+
+Stream(gen)
 ```
 
 **map(self, predicate)**
+
 ```
 Stream.range(1).map(lambda x: x*x)
+
+def what_the_hell_you_want(item):
+	# awesome treatments
+	return item
+	
+Stream.range(10).map(what_the_hell_you_want)
+```
+**filter(self, predicate)**
+```
+stream = Stream.range(10).filter(lambda x: x > 8)
+# because Stream is an iterable you can loop on it
+for item in stream:
+    print item
+> 9
+```
+**chain(self, iterable)**
+```
+stream = Stream([1, 2, 3]).chain([4, 5, 6])
+stream.list() == [1, 2, 3, 4, 5, 6]
+> True
+
+stream = Stream([1, 2, 3]).chain(Stream([4, 5, 6]))
+stream.list() == [1, 2, 3, 4, 5, 6]
+> True
+```
+**exclude(self, predicate)**
+```
+stream = Stream.range(10).exclude(lambda x: x < 5)
+stream.list() == [6, 7, 8, 9]
+> True
+```
+
+**peek(self, function)**
+```
+# peek is a bit tricky. It calls a function on your stream but without modifying it. 
+stream = Stream.range(2).peek(logger.debug)
+> [DEBUG] 0
+> [DEBUG] 1
+> [DEBUG] 2
+stream.list == [0, 1, 2]
+> True
+```
+
+**chunk(self, chunk_size)**
+```
+def make_some_api_call(item):
+	# request
+	return True
+
+stream = Stream(some_huge_list).chunk(100).map(make_some_api_call)
+for response in stream:
+	# deal with it
 ```
