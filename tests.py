@@ -2,6 +2,7 @@ import unittest
 from .streampy import Stream
 from .compatibility import _comparer
 
+
 class CreationTest(unittest.TestCase):
     def test_create_stream_without_params(self):
         s = Stream()

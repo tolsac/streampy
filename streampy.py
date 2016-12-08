@@ -1,5 +1,5 @@
-from .streamexecutor import StreamExecutor
-from .compatibility import _mapper, _filter, _chainer, _ranger, _islicer
+from streamexecutor import StreamExecutor
+from compatibility import _mapper, _filter, _chainer, _ranger, _islicer
 import functools
 
 
@@ -122,9 +122,11 @@ class Stream(object):
 
     def sort(self, **kwargs):
         _cmp = kwargs.pop('cmp', None)
-
+        _key = kwargs.pop('key', None)
         if _cmp:
             kwargs['key'] = functools.cmp_to_key(_cmp)
+        if _key:
+            kwargs['key'] = _key
         return self.__class__(sorted(self.iterable, **kwargs))
 
     def limit(self, count):
@@ -190,6 +192,9 @@ class Stream(object):
             return last_it
         else:
             return self.filter(predicate).last()
+
+    def reverse(self):
+        return self.__class__(reversed(list(self.iterable)))
 
     @staticmethod
     def file(*args):
