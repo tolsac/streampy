@@ -1,6 +1,6 @@
-import unittest
 from streampy import Stream
 from compatibility import _comparer
+import unittest
 
 
 class CreationTest(unittest.TestCase):
