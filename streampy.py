@@ -33,12 +33,9 @@ class Stream(object):
         return sum(1 for item in self.iterable)
 
     def __getitem__(self, position):
-        i = 0
-        if i <= 0:
-            for it in self.iterable:
-                if i == position:
-                    return it
-                i += 1
+        for idx, it in enumerate(self.iterable):
+            if idx == position:
+                return it
         raise IndexError("Stream index out of range")
 
     def __enter__(self):
@@ -195,6 +192,9 @@ class Stream(object):
 
     def reverse(self):
         return self.__class__(reversed(list(self.iterable)))
+
+    def collect(self, collector):
+        return collector.collect(iterable=self.iterable)
 
     @staticmethod
     def file(*args):

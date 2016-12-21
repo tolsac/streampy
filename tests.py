@@ -1,4 +1,5 @@
 from streampy import Stream
+from streamcollector import Collector
 from compatibility import _comparer
 import unittest
 
@@ -73,18 +74,21 @@ class MapTest(unittest.TestCase):
     def test_simple_map_1(self):
         def add(x, y):
             return x + y
-        s = Stream.range(10000).map(lambda x: x*2).reduce(add, initializer=0)
+
+        s = Stream.range(10000).map(lambda x: x * 2).reduce(add, initializer=0)
         self.assertEquals(s, 99990000)
 
     def test_simple_map_2(self):
         def to_dict(obj):
             return {str(obj): obj}
+
         s = Stream.range(10000).map(to_dict).size()
         self.assertEquals(s, 10000)
 
     def test_simple_map_3(self):
         def to_dict(obj):
             return {str(obj): obj}
+
         s = Stream([1, 2, 3]).map(to_dict).list()
         self.assertEqual(s, [{'1': 1}, {'2': 2}, {'3': 3}])
 
@@ -219,8 +223,8 @@ class SubstreamTest(unittest.TestCase):
         self.assertEqual(Stream([1, 2, 3, 4]).substream(1, 2).list(), [2])
 
     def test_simple_substream_4(self):
-        s = Stream.range(100)\
-            .chain(Stream.range(100, 1000))\
+        s = Stream.range(100) \
+            .chain(Stream.range(100, 1000)) \
             .substream(100, 200).list()
         self.assertEqual(s, list(range(100, 200)))
 
@@ -238,45 +242,95 @@ class ChunkTest(unittest.TestCase):
 
 class FunctionnalTest(unittest.TestCase):
     def test_simple_1(self):
-        element = Stream\
-            .range(100000)\
-            .filter(lambda x: x % 2 == 0)\
-            .map(lambda x: str(x))\
-            .map(lambda x: 'hey{0}'.format(x))\
+        element = Stream \
+            .range(100000) \
+            .filter(lambda x: x % 2 == 0) \
+            .map(lambda x: str(x)) \
+            .map(lambda x: 'hey{0}'.format(x)) \
             .first()
         self.assertEquals(element, 'hey0')
 
     def test_simple_2(self):
-        element = Stream\
-            .range(100000)\
-            .filter(lambda x: x % 2 == 0)\
-            .map(lambda x: str(x))\
-            .map(lambda x: 'hey{0}'.format(x))\
-            .limit(10)\
+        element = Stream \
+            .range(100000) \
+            .filter(lambda x: x % 2 == 0) \
+            .map(lambda x: str(x)) \
+            .map(lambda x: 'hey{0}'.format(x)) \
+            .limit(10) \
             .last()
         self.assertEquals(element, 'hey18')
 
     def test_simple_3(self):
-        element = Stream.range(100000)\
-            .filter(lambda x: x % 2 == 0)\
-            .map(lambda x: str(x))\
-            .map(lambda x: 'Hi{0}'.format(x))\
-            .map(lambda x: x.upper())\
-            .filter(lambda x: x.endswith('8'))\
-            .limit(10)\
-            .map(lambda x: x[2])\
-            .skip(1)\
-            .map(int)\
+        element = Stream.range(100000) \
+            .filter(lambda x: x % 2 == 0) \
+            .map(lambda x: str(x)) \
+            .map(lambda x: 'Hi{0}'.format(x)) \
+            .map(lambda x: x.upper()) \
+            .filter(lambda x: x.endswith('8')) \
+            .limit(10) \
+            .map(lambda x: x[2]) \
+            .skip(1) \
+            .map(int) \
             .list()
         self.assertEquals(element, list(range(1, 10)))
 
     def test_simple_4(self):
         element = Stream(['You', 'shall', 'not', 'pass']) \
             .map(lambda x: x.upper()) \
-            .exclude(lambda x: x == 'NOT')\
-            .exclude(lambda x: x == 'PASS')\
-            .chain(["pass"])\
+            .exclude(lambda x: x == 'NOT') \
+            .exclude(lambda x: x == 'PASS') \
+            .chain(["pass"]) \
             .map(lambda x: x.upper()) \
             .list()
         self.assertEquals(element, ['YOU', 'SHALL', 'PASS'])
 
+
+class CollectTest(unittest.TestCase):
+    def test_collect_simple_list(self):
+        lst = Stream.range(10) \
+            .map(lambda x: x * 2) \
+            .collect(Collector.list())
+        self.assertEqual(lst, [0, 2, 4, 6, 8, 10, 12, 14, 16, 18])
+
+    def test_collect_simple_group_by(self):
+        peoples = [
+            {'name': 'Camille', 'age': 24},
+            {'name': 'Laurent', 'age': 22},
+            {'name': 'Matthias', 'age': 21},
+            {'name': 'Bertrand', 'age': 25},
+            {'name': 'David', 'age': 22},
+        ]
+
+        res = {
+            21: [{'name': 'Matthias', 'age': 21}],
+            22: [
+                    {'name': 'Laurent', 'age': 22},
+                    {'name': 'David', 'age': 22},
+                 ],
+            24: [{'name': 'Camille', 'age': 24}],
+            25: [{'name': 'Bertrand', 'age': 25}]
+        }
+
+        lst = Stream(peoples) \
+            .collect(Collector.group_by(lambda x: x['age']))
+        self.assertEqual(lst, res)
+
+    def test_collect_simple_count_by(self):
+        peoples = [
+            {'name': 'Camille', 'age': 24},
+            {'name': 'Laurent', 'age': 22},
+            {'name': 'Matthias', 'age': 21},
+            {'name': 'Bertrand', 'age': 25},
+            {'name': 'David', 'age': 22},
+        ]
+
+        res = {
+            21: 1,
+            22: 2,
+            24: 1,
+            25: 1
+        }
+
+        lst = Stream(peoples) \
+            .collect(Collector.count_by(lambda x: x['age']))
+        self.assertEqual(lst, res)
