@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='streampy',
-      version='1.1',
+      version='1.2',
       description='Java like stream pipelines, supports parallel operations',
       url='https://github.com/tolsac/streampy.git',
       author='Camille Tolsa',
