@@ -171,7 +171,7 @@ stream = Stream.range(2).peek(logger.debug)
 > [DEBUG] 0
 > [DEBUG] 1
 > [DEBUG] 2
-stream.list == [0, 1, 2]
+stream.list() == [0, 1, 2]
 > True
 ```
 
